@@ -1,4 +1,5 @@
 #include "methods.h"
+#include "stopping_criterion.h"
 
 
 using vec = std::vector<double>;
@@ -13,8 +14,10 @@ std::ostream& operator<<
     const std::ios::fmtflags old_flags = out.flags();
     const std::streamsize old_precision = out.precision();
 
+
     out << std::fixed << std::setprecision(6);
-    out << "Point: [";
+    out << "SearchResults:\n";
+	out << "    Point: [";
 
     for (std::size_t i = 0; i < result.point.size(); ++i) 
 	{
@@ -26,8 +29,8 @@ std::ostream& operator<<
     }
 
     out << "]\n";
-    out << "Function value: " << result.value << '\n';
-    out << "Iterations: " << result.iterations;
+    out << "    Function value: " << result.value << '\n';
+    out << "    Iterations: " << result.iterations;
 
     out.flags(old_flags);
     out.precision(old_precision);
@@ -36,35 +39,30 @@ std::ostream& operator<<
 }
 
 
-IterativeMethod::IterativeMethod(std::size_t max_iterations, double epsilon): 
-	max_iterations_(max_iterations),
-	epsilon_(epsilon) 
+IterativeMethod::IterativeMethod(std::size_t max_iterations): 
+	max_iterations_(max_iterations)
 {
 	if (max_iterations_ == 0)
 	{
 		throw std::invalid_argument("N must be positive");
 	}
 
-	if (epsilon_ < 0.0)
-	{
-		throw std::invalid_argument("Invalid epsilon");
-	}
 }
 
 
 RandomSearch::RandomSearch
 (
 	std::size_t max_iterations,
-	double epsilon,
 	std::mt19937& generator
 ):    
-	IterativeMethod(max_iterations, epsilon),
+	IterativeMethod(max_iterations),
 	generator_(generator) 
 {}
 
 SearchResults RandomSearch::optimize(
 	const Domain& domain,
-	const std::function<double(const vec&)>& function
+	const std::function<double(const vec&)>& function,
+	const std::vector<std::unique_ptr<StoppingCriterion>>& stopping_criteria
 ) 
 {
 	vec& current = search_res_.point;
@@ -76,7 +74,14 @@ SearchResults RandomSearch::optimize(
 	std::size_t& iterations = search_res_.iterations;
 	iterations = 0;
 
-	for (; iterations < max_iterations_; ++iterations) 
+	std::vector<const StoppingCriterion*> stopping_criteria_internal;
+	stopping_criteria_internal.reserve(1 + stopping_criteria.size());
+	MaxIter max_iter_criterion{max_iterations_};
+	stopping_criteria_internal.push_back(&max_iter_criterion);
+	for(const auto& c : stopping_criteria)
+		stopping_criteria_internal.push_back(c.get());
+	
+	for (;;++iterations) 
 	{
 		vec candidate = domain.sample(generator_);
 		const double candidate_value = function(candidate);
@@ -88,11 +93,18 @@ SearchResults RandomSearch::optimize(
 			current_value = candidate_value;
 		}
 
-		const double difference =
-			std::abs(current_value - previous_value);
+		for(const auto& st_cr : stopping_criteria_internal)
+		{
+			if(st_cr->check(*this))
+			{
+				std::cout << st_cr->get_stop_msg(*this) << std::endl;
+				goto end;
+			}
+		}
 
 	}
 
-	return search_res_;
+	end:
+		return search_res_;
 }
 

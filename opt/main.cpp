@@ -1,5 +1,6 @@
 #include "domains.h"
 #include "methods.h"
+#include "stopping_criterion.h"
 #include <random>
 
 
@@ -54,20 +55,24 @@ double f4(const vec& x)
 int main()
 {
 	std::mt19937 gen(std::random_device{}());
+	// std::mt19937 gen(67);
 
     Rect domain(
         vec{-5.0, -5.0 },
         vec{5.0, 5.0 }
     );
 
-    RandomSearch method(900000, 1e-8, gen);
+    RandomSearch method(900000, gen);
+	std::vector<std::unique_ptr<StoppingCriterion>> sc;
+	sc.emplace_back(std::make_unique<FuncVal>(0.001));
     const SearchResults result = method.optimize(
         domain,
         [](const vec& x) {
             return f2(x);
-        }
+        },
+		sc
     );
-    std::cout << result << '\n';
+    std::cout << '\n' << result << '\n';
 
     return 0;
 }

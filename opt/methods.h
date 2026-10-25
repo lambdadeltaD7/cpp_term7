@@ -4,6 +4,7 @@
 
 #include <memory>
 #include <cmath>
+#include <algorithm>
 #include <functional>
 #include <iomanip>
 #include <iostream>
@@ -80,4 +81,34 @@ public:
     ) override;
 };
 
+
+class DeformPoly: public IterativeMethod
+{
+private:
+	std::size_t max_iterations_;
+	
+	double alpha_;
+	double beta_;
+	double gamma_;
+	
+	double vertex_dist_;
+
+public:
+	DeformPoly(	
+		std::size_t max_iterations,
+		double alpha = 1.0,
+		double beta  = 1.0,
+		double gamma = 1.0,
+		double vertex_dist = 1.0
+	);
+
+    SearchResults optimize(
+        const Domain& domain,
+        const std::function<double(const vec&)>& function,
+		const std::vector<std::unique_ptr<StoppingCriterion>>& stopping_criteria
+    ) override;
+};
+
+
 #endif
+

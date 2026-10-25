@@ -63,14 +63,16 @@ int main()
     );
 
     RandomSearch method(900000, gen);
-	std::vector<std::unique_ptr<StoppingCriterion>> sc;
-	sc.emplace_back(std::make_unique<FuncVal>(0.001));
+
+	std::vector<std::unique_ptr<StoppingCriterion>> stopping_criteria;
+	stopping_criteria.emplace_back(std::make_unique<FuncVal>(0.001));
+
     const SearchResults result = method.optimize(
         domain,
         [](const vec& x) {
             return f2(x);
         },
-		sc
+		stopping_criteria
     );
     std::cout << '\n' << result << '\n';
 

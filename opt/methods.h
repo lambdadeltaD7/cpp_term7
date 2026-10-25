@@ -29,6 +29,7 @@ class IterativeMethod
 protected:
     std::size_t max_iterations_;
     double epsilon_;
+	SearchResults search_res_;
 
 public:
     IterativeMethod(std::size_t max_iterations, double epsilon);

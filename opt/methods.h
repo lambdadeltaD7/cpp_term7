@@ -97,8 +97,8 @@ public:
 	DeformPoly(	
 		std::size_t max_iterations,
 		double alpha = 1.0,
-		double beta  = 1.0,
-		double gamma = 1.0,
+		double beta  = 0.5,
+		double gamma = 2.0,
 		double vertex_dist = 1.0
 	);
 

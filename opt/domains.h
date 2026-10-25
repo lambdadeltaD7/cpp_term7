@@ -13,7 +13,8 @@ private:
 	std::size_t dim_;
 
 public:
-	Domain(std::size_t dim);
+	Domain(std::size_t dim):
+		dim_{dim} {}
 
     virtual bool contains(const vec& point) const = 0;
     

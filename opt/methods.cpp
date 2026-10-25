@@ -66,6 +66,8 @@ SearchResults RandomSearch::optimize(
 	const std::vector<std::unique_ptr<StoppingCriterion>>& stopping_criteria
 ) 
 {
+	std::cout << "Running RandomSearch method\n\n";
+
 	vec& current = search_res_.point;
 	current = domain.sample(generator_);
 
@@ -197,6 +199,8 @@ SearchResults DeformPoly::optimize
 	const std::vector<std::unique_ptr<StoppingCriterion>>& stopping_criteria
 )
 {
+	std::cout << "Running DeformPoly method\n\n";
+
 	// initialize polygon vertices 
 	std::size_t n = domain.get_dim();
 	double& t = vertex_dist_;
@@ -259,7 +263,7 @@ SearchResults DeformPoly::optimize
 			vec x_exp = mass_c + gamma_ * (x_refl - mass_c); 
 			double f_exp = function(x_exp);
 
-			if (f_exp < f_refl)
+			if (f_exp < pairs[0].val)
 			{
 				pairs[n].point = x_exp;
 				pairs[n].val = f_exp;
@@ -272,23 +276,46 @@ SearchResults DeformPoly::optimize
 		}
 		else if (f_refl < pairs[n - 1].val)
 		{
-		
-		}
-		else if (f_refl < pairs[n].val)
-		{
-		
+			pairs[n].point = x_refl;
+			pairs[n].val = f_refl;
 		}
 		else
 		{
-			// reduction
-			for (std::size_t i=0; i<pairs.size(); ++i)
-				pairs[i].point = pairs[0].point + 
-					0.5 * (pairs[i].point - pairs[0].point);
+			if (f_refl < pairs[n].val)
+			{
+				pairs[n].point = x_refl;
+				pairs[n].val = f_refl;
+			}
+
+			// shrinkin'
+			vec x_shr = mass_c + beta_ * (pairs[n].point - mass_c);
+			double f_shr = function(x_shr);
+
+			if (f_shr < pairs[n].val)
+			{
+				pairs[n].val = f_shr;
+				pairs[n].point = x_shr;
+			}
+			else 
+			{
+				// reduction
+				for (std::size_t i=0; i<pairs.size(); ++i)
+					pairs[i].point = pairs[0].point + 
+						0.5 * (pairs[i].point - pairs[0].point);
+			}
 		}
 		
-
-		//sort by hand
-
+		// put pairs[n] on it's place (do sort)
+		for (std::size_t i=0; i<=n; ++i)
+		{
+			if(pairs[n].val <= pairs[i].val)
+			{
+				pairs.insert(pairs.begin()+i, pairs[n]);
+				pairs.pop_back();
+				break;
+			}
+		}
+		
 		current = pairs[0].point;
 		current_value = pairs[0].val;
 	}

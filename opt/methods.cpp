@@ -86,7 +86,6 @@ SearchResults RandomSearch::optimize(
 		vec candidate = domain.sample(generator_);
 		const double candidate_value = function(candidate);
 
-		const double previous_value = current_value;
 
 		if (candidate_value < current_value) {
 			current = std::move(candidate);

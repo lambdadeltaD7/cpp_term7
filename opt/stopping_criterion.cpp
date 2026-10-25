@@ -10,7 +10,7 @@ bool MaxIter::check(const IterativeMethod& method) const
 	return method.get_search_res().iterations >= max_iter_;
 }
 
-std::string MaxIter::get_stop_msg(const IterativeMethod& method) const
+std::string MaxIter::get_stop_msg([[maybe_unused]] const IterativeMethod& method) const
 {
 	return "stopped because reached max_iter = " + 
 			std::to_string(max_iter_);

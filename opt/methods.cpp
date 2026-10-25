@@ -67,10 +67,14 @@ SearchResults RandomSearch::optimize(
 	const std::function<double(const vec&)>& function
 ) 
 {
-	vec current = domain.sample(generator_);
-	double current_value = function(current);
+	vec& current = search_res_.point;
+	current = domain.sample(generator_);
 
-	std::size_t iterations = 0;
+	double& current_value = search_res_.value;
+	current_value = function(current);
+
+	std::size_t& iterations = search_res_.iterations;
+	iterations = 0;
 
 	for (; iterations < max_iterations_; ++iterations) 
 	{
@@ -87,14 +91,8 @@ SearchResults RandomSearch::optimize(
 		const double difference =
 			std::abs(current_value - previous_value);
 
-//             if (difference < epsilon_) {
-//                 ++iterations;
-//                 break;
-//             }
 	}
 
-	return SearchResults{
-		current, current_value, iterations
-	};
+	return search_res_;
 }
 

@@ -56,15 +56,15 @@ int main()
 	std::mt19937 gen(std::random_device{}());
 
     Rect domain(
-        vec{-5.0, -5.0, -5.},
-        vec{5.0, 5.0, 5}
+        vec{-5.0, -5.0 },
+        vec{5.0, 5.0 }
     );
 
     RandomSearch method(900000, 1e-8, gen);
     const SearchResults result = method.optimize(
         domain,
         [](const vec& x) {
-            return f4(x);
+            return f2(x);
         }
     );
     std::cout << result << '\n';

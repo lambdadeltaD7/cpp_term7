@@ -80,8 +80,8 @@ void ex1()
 void ex2()
 {
     Rect domain(
-        vec{-6.0, -5.0},
-        vec{5.0, 5.0}
+        vec{-6.0, -5.0, -5},
+        vec{5.0, 5.0, 6}
     );
 	
 	double alpha = 1.0;
@@ -89,15 +89,15 @@ void ex2()
 	double gamma = 2;
 	double vertex_dist = 1;
 
-    DeformPoly method(8000, alpha, beta, gamma, vertex_dist); 
+    DeformPoly method(90, alpha, beta, gamma, vertex_dist); 
 
 	std::vector<std::unique_ptr<StoppingCriterion>> stopping_criteria;
-	stopping_criteria.emplace_back(std::make_unique<FuncVal>(0.00001));
+	stopping_criteria.emplace_back(std::make_unique<FuncVal>(0.00000001));
 
     const SearchResults result = method.optimize(
         domain,
         [](const vec& x) {
-            return f2(x);
+            return f4(x);
         },
 		stopping_criteria
     );

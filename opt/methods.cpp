@@ -15,7 +15,7 @@ std::ostream& operator<<
     const std::streamsize old_precision = out.precision();
 
 
-    out << std::fixed << std::setprecision(6);
+    out << std::fixed << std::setprecision(10);
     out << "SearchResults:\n";
 	out << "    Point: [";
 
@@ -29,7 +29,8 @@ std::ostream& operator<<
     }
 
     out << "]\n";
-    out << "    Function value: " << result.value << '\n';
+    out << "    Function value: " 
+		<< std::scientific << result.value << '\n';
     out << "    Iterations: " << result.iterations;
 
     out.flags(old_flags);
@@ -98,7 +99,7 @@ SearchResults RandomSearch::optimize(
 		{
 			if(st_cr->check(*this))
 			{
-				std::cout << st_cr->get_stop_msg(*this) << std::endl;
+				st_cr->get_stop_msg(*this);
 				goto end;
 			}
 		}
@@ -246,7 +247,7 @@ SearchResults DeformPoly::optimize
 		{
 			if(st_cr->check(*this))
 			{
-				std::cout << st_cr->get_stop_msg(*this) << std::endl;
+				st_cr->get_stop_msg(*this);
 				goto end;
 			}
 		}

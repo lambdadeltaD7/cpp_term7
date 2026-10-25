@@ -13,7 +13,7 @@ class StoppingCriterion
 public:
 
 	virtual bool check(const IterativeMethod& method) const = 0;
-	virtual std::string get_stop_msg(const IterativeMethod& method) const = 0;
+	virtual void get_stop_msg(const IterativeMethod& method) const = 0;
 
 	virtual ~StoppingCriterion() = default;
 
@@ -29,7 +29,7 @@ public:
 	MaxIter(std::size_t max_iter);
 
 	bool check(const IterativeMethod& method) const override;
-	std::string get_stop_msg(const IterativeMethod& method) const override;
+	void get_stop_msg(const IterativeMethod& method) const override;
 };
 
 
@@ -42,7 +42,7 @@ public:
 	FuncVal(double func_val);
 
 	bool check(const IterativeMethod& method) const override;
-	std::string get_stop_msg(const IterativeMethod& method) const override;
+	void get_stop_msg(const IterativeMethod& method) const override;
 };
 
 #endif

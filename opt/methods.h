@@ -85,8 +85,6 @@ public:
 class DeformPoly: public IterativeMethod
 {
 private:
-	std::size_t max_iterations_;
-	
 	double alpha_;
 	double beta_;
 	double gamma_;

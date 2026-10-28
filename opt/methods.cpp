@@ -26,6 +26,22 @@ RandomSearch::RandomSearch
 {}
 
 
+std::vector<const StoppingCriterion*> 
+add_stopping_criterion(
+	std::size_t max_iterations_,
+	const std::vector<std::unique_ptr<StoppingCriterion>>& stopping_criteria
+)
+{
+	std::vector<const StoppingCriterion*> stopping_criteria_internal;
+	stopping_criteria_internal.reserve(1 + stopping_criteria.size());
+	MaxIter *max_iter_criterion = new MaxIter{max_iterations_};
+	stopping_criteria_internal.push_back(max_iter_criterion);
+	for(const auto& c : stopping_criteria)
+		stopping_criteria_internal.push_back(c.get());
+	return stopping_criteria_internal;
+}
+
+
 SearchResults RandomSearch::optimize(
 	const Domain& domain,
 	const std::function<double(const vec&)>& function,
@@ -33,6 +49,7 @@ SearchResults RandomSearch::optimize(
 ) 
 {
 	std::cout << "Running RandomSearch method\n\n";
+
 
 	vec& current = search_res_.point;
 	current = domain.sample(generator_);
@@ -42,14 +59,13 @@ SearchResults RandomSearch::optimize(
 
 	std::size_t& iterations = search_res_.iterations;
 	iterations = 0;
-
-	std::vector<const StoppingCriterion*> stopping_criteria_internal;
-	stopping_criteria_internal.reserve(1 + stopping_criteria.size());
-	MaxIter max_iter_criterion{max_iterations_};
-	stopping_criteria_internal.push_back(&max_iter_criterion);
-	for(const auto& c : stopping_criteria)
-		stopping_criteria_internal.push_back(c.get());
 	
+
+	// explicitly add MaxIter criterion 
+	std::vector<const StoppingCriterion*> stopping_criteria_internal = 
+		add_stopping_criterion(max_iterations_, stopping_criteria);
+	
+
 	for (;;++iterations) 
 	{
 		vec candidate = domain.sample(generator_);
@@ -91,21 +107,12 @@ DeformPoly::DeformPoly
 	vertex_dist_{vertex_dist}
 {}
 
-
-
-
-SearchResults DeformPoly::optimize
-(
-	const Domain& domain,
-	const std::function<double(const vec&)>& function,
-	const std::vector<std::unique_ptr<StoppingCriterion>>& stopping_criteria
+std::vector<Pair> simplex_init(
+	std::size_t n, //dim
+	double t, // vertex_dist
+	const std::function<double(const vec&)>& function
 )
 {
-	std::cout << "Running DeformPoly method\n\n";
-
-	// initialize polygon vertices 
-	std::size_t n = domain.get_dim();
-	double& t = vertex_dist_;
 	double sqrt2 = std::sqrt(2);
 	double d1 = t / (n * sqrt2) * (std::sqrt(n + 1) + n - 1);
 	double d2 = t / (n * sqrt2) * (std::sqrt(n + 1) - 1);
@@ -119,9 +126,34 @@ SearchResults DeformPoly::optimize
 		pairs[i].point[i - 1] = d1;
 		pairs[i].val = function(pairs[i].point);
 	}
-	
+
+	return pairs;
+}
+
+
+
+SearchResults DeformPoly::optimize
+(
+	const Domain& domain,
+	const std::function<double(const vec&)>& function,
+	const std::vector<std::unique_ptr<StoppingCriterion>>& stopping_criteria
+)
+{
+	std::cout << "Running DeformPoly method\n\n";
+
+	std::size_t n = domain.get_dim();
+
+	// initialize polygon vertices 
+	std::vector<Pair> pairs = 
+		simplex_init(
+			n,
+			vertex_dist_,
+			function
+		);
+		
 	// initial sort
 	std::sort(pairs.begin(), pairs.end(), comp);
+
 
 	// some refs for convinience
 	vec& current = search_res_.point;
@@ -133,14 +165,12 @@ SearchResults DeformPoly::optimize
 	std::size_t& iterations = search_res_.iterations;
 	iterations = 0;
 
+
 	// explicitly add MaxIter criterion 
-	std::vector<const StoppingCriterion*> stopping_criteria_internal;
-	stopping_criteria_internal.reserve(1 + stopping_criteria.size());
-	MaxIter max_iter_criterion{max_iterations_};
-	stopping_criteria_internal.push_back(&max_iter_criterion);
-	for(const auto& c : stopping_criteria)
-		stopping_criteria_internal.push_back(c.get());
-	
+	std::vector<const StoppingCriterion*> stopping_criteria_internal = 
+		add_stopping_criterion(max_iterations_, stopping_criteria);
+
+
 	// main loop
 	for (;;++iterations) 
 	{

@@ -1,6 +1,9 @@
 #include "stopping_criterion.h"
 #include "methods.h"
 
+#include <sstream>
+#include <iomanip>
+#include <string>
 
 MaxIter::MaxIter(std::size_t max_iter):
 	max_iter_(max_iter) {}
@@ -10,10 +13,12 @@ bool MaxIter::check(const IterativeMethod& method) const
 	return method.get_search_res().iterations >= max_iter_;
 }
 
-std::string MaxIter::get_stop_msg([[maybe_unused]] const IterativeMethod& method) const
+void MaxIter::get_stop_msg([[maybe_unused]] const IterativeMethod& method) const
 {
-	return "stopped because reached max_iter = " + 
-			std::to_string(max_iter_);
+	std::cout 
+		<< "stopped because reached max_iter = " + 
+		   std::to_string(max_iter_)
+		<< std::endl;
 }
 
 
@@ -25,11 +30,15 @@ bool FuncVal::check(const IterativeMethod& method) const
 	return method.get_search_res().value <= func_val_;
 }
 
-std::string FuncVal::get_stop_msg(const IterativeMethod& method) const
+
+void FuncVal::get_stop_msg(const IterativeMethod& method) const
 {
-	return "stopped because found point where function value is <= than desired\n" + 
-			std::to_string(method.get_search_res().value) +
-			" <= " +
-			std::to_string(func_val_);
+	std::cout
+		<< std::scientific 
+		<< "stopped because found point where " 
+		   "function value is <= than desired\n" 
+		<< method.get_search_res().value
+		<< " <= " 
+		<< func_val_ << std::endl;
 }
 

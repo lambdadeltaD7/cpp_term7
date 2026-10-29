@@ -52,20 +52,20 @@ double f4(const vec& x)
 }
 
 
-int main()
+void ex1()
 {
 	std::mt19937 gen(std::random_device{}());
 	// std::mt19937 gen(67);
 
     Rect domain(
-        vec{-5.0, -5.0 },
-        vec{5.0, 5.0 }
+        vec{-6.0, -5.0},
+        vec{5.0, 5.0}
     );
 
-    RandomSearch method(900000, gen);
+    RandomSearch method(800000, gen);
 
-	std::vector<std::unique_ptr<StoppingCriterion>> stopping_criteria;
-	stopping_criteria.emplace_back(std::make_unique<FuncVal>(0.001));
+	std::vector<std::shared_ptr<StoppingCriterion>> stopping_criteria;
+	stopping_criteria.emplace_back(std::make_shared<FuncVal>(0.001));
 
     const SearchResults result = method.optimize(
         domain,
@@ -75,6 +75,39 @@ int main()
 		stopping_criteria
     );
     std::cout << '\n' << result << '\n';
+}
+
+void ex2()
+{
+    Rect domain(
+        vec{-6.0, -5.0, -5},
+        vec{5.0, 5.0, 6}
+    );
+	
+	double alpha = 1.0;
+	double beta = 0.5;
+	double gamma = 2;
+	double vertex_dist = 1;
+
+    DeformPoly method(90, alpha, beta, gamma, vertex_dist); 
+
+	std::vector<std::shared_ptr<StoppingCriterion>> stopping_criteria;
+	stopping_criteria.emplace_back(std::make_shared<FuncVal>(0.000001));
+
+    const SearchResults result = method.optimize(
+        domain,
+        [](const vec& x) {
+            return f4(x);
+        },
+		stopping_criteria
+    );
+    std::cout << '\n' << result << '\n';
+}
+
+
+int main()
+{
+	ex2();
 
     return 0;
 }

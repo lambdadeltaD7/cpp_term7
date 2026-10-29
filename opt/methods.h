@@ -4,6 +4,7 @@
 
 #include <memory>
 #include <cmath>
+#include <algorithm>
 #include <functional>
 #include <iomanip>
 #include <iostream>
@@ -43,7 +44,7 @@ public:
     virtual SearchResults optimize(
         const Domain& domain,
         const std::function<double(const vec&)>& function,
-		const std::vector<std::unique_ptr<StoppingCriterion>>& stopping_criteria
+		const std::vector<std::shared_ptr<StoppingCriterion>>& stopping_criteria
     ) = 0;
 
 
@@ -76,8 +77,36 @@ public:
     SearchResults optimize(
         const Domain& domain,
         const std::function<double(const vec&)>& function,
-		const std::vector<std::unique_ptr<StoppingCriterion>>& stopping_criteria
+		const std::vector<std::shared_ptr<StoppingCriterion>>& stopping_criteria
     ) override;
 };
 
+
+class DeformPoly: public IterativeMethod
+{
+private:
+	double alpha_;
+	double beta_;
+	double gamma_;
+	
+	double vertex_dist_;
+
+public:
+	DeformPoly(	
+		std::size_t max_iterations,
+		double alpha = 1.0,
+		double beta  = 0.5,
+		double gamma = 2.0,
+		double vertex_dist = 1.0
+	);
+
+    SearchResults optimize(
+        const Domain& domain,
+        const std::function<double(const vec&)>& function,
+		const std::vector<std::shared_ptr<StoppingCriterion>>& stopping_criteria
+    ) override;
+};
+
+
 #endif
+

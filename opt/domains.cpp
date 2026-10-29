@@ -6,6 +6,7 @@ using vec = std::vector<double>;
 
 
 Rect::Rect(const vec& lower, const vec& upper):
+	Domain(lower.size()),
 	lower_(lower),
 	upper_(upper)
 {

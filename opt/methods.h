@@ -44,7 +44,7 @@ public:
     virtual SearchResults optimize(
         const Domain& domain,
         const std::function<double(const vec&)>& function,
-		const std::vector<std::unique_ptr<StoppingCriterion>>& stopping_criteria
+		const std::vector<std::shared_ptr<StoppingCriterion>>& stopping_criteria
     ) = 0;
 
 
@@ -77,7 +77,7 @@ public:
     SearchResults optimize(
         const Domain& domain,
         const std::function<double(const vec&)>& function,
-		const std::vector<std::unique_ptr<StoppingCriterion>>& stopping_criteria
+		const std::vector<std::shared_ptr<StoppingCriterion>>& stopping_criteria
     ) override;
 };
 
@@ -103,7 +103,7 @@ public:
     SearchResults optimize(
         const Domain& domain,
         const std::function<double(const vec&)>& function,
-		const std::vector<std::unique_ptr<StoppingCriterion>>& stopping_criteria
+		const std::vector<std::shared_ptr<StoppingCriterion>>& stopping_criteria
     ) override;
 };
 

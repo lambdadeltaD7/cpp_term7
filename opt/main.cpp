@@ -64,8 +64,8 @@ void ex1()
 
     RandomSearch method(800000, gen);
 
-	std::vector<std::unique_ptr<StoppingCriterion>> stopping_criteria;
-	stopping_criteria.emplace_back(std::make_unique<FuncVal>(0.001));
+	std::vector<std::shared_ptr<StoppingCriterion>> stopping_criteria;
+	stopping_criteria.emplace_back(std::make_shared<FuncVal>(0.001));
 
     const SearchResults result = method.optimize(
         domain,
@@ -91,8 +91,8 @@ void ex2()
 
     DeformPoly method(90, alpha, beta, gamma, vertex_dist); 
 
-	std::vector<std::unique_ptr<StoppingCriterion>> stopping_criteria;
-	stopping_criteria.emplace_back(std::make_unique<FuncVal>(0.00000001));
+	std::vector<std::shared_ptr<StoppingCriterion>> stopping_criteria;
+	stopping_criteria.emplace_back(std::make_shared<FuncVal>(0.000001));
 
     const SearchResults result = method.optimize(
         domain,

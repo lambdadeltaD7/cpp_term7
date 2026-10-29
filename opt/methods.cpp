@@ -26,26 +26,10 @@ RandomSearch::RandomSearch
 {}
 
 
-std::vector<const StoppingCriterion*> 
-add_stopping_criterion(
-	std::size_t max_iterations_,
-	const std::vector<std::unique_ptr<StoppingCriterion>>& stopping_criteria
-)
-{
-	std::vector<const StoppingCriterion*> stopping_criteria_internal;
-	stopping_criteria_internal.reserve(1 + stopping_criteria.size());
-	MaxIter *max_iter_criterion = new MaxIter{max_iterations_};
-	stopping_criteria_internal.push_back(max_iter_criterion);
-	for(const auto& c : stopping_criteria)
-		stopping_criteria_internal.push_back(c.get());
-	return stopping_criteria_internal;
-}
-
-
 SearchResults RandomSearch::optimize(
 	const Domain& domain,
 	const std::function<double(const vec&)>& function,
-	const std::vector<std::unique_ptr<StoppingCriterion>>& stopping_criteria
+	const std::vector<std::shared_ptr<StoppingCriterion>>& stopping_criteria
 ) 
 {
 	std::cout << "Running RandomSearch method\n\n";
@@ -59,12 +43,17 @@ SearchResults RandomSearch::optimize(
 
 	std::size_t& iterations = search_res_.iterations;
 	iterations = 0;
-	
+
 
 	// explicitly add MaxIter criterion 
-	std::vector<const StoppingCriterion*> stopping_criteria_internal = 
-		add_stopping_criterion(max_iterations_, stopping_criteria);
-	
+	std::vector<std::shared_ptr<StoppingCriterion>>
+		stopping_criteria_internal = stopping_criteria;
+
+	stopping_criteria_internal.insert(
+			stopping_criteria_internal.begin(),
+			std::make_shared<MaxIter>(max_iterations_)
+		);
+
 
 	for (;;++iterations) 
 	{
@@ -136,7 +125,7 @@ SearchResults DeformPoly::optimize
 (
 	const Domain& domain,
 	const std::function<double(const vec&)>& function,
-	const std::vector<std::unique_ptr<StoppingCriterion>>& stopping_criteria
+	const std::vector<std::shared_ptr<StoppingCriterion>>& stopping_criteria
 )
 {
 	std::cout << "Running DeformPoly method\n\n";
@@ -167,8 +156,13 @@ SearchResults DeformPoly::optimize
 
 
 	// explicitly add MaxIter criterion 
-	std::vector<const StoppingCriterion*> stopping_criteria_internal = 
-		add_stopping_criterion(max_iterations_, stopping_criteria);
+	std::vector<std::shared_ptr<StoppingCriterion>>
+		stopping_criteria_internal = stopping_criteria;
+
+	stopping_criteria_internal.insert(
+			stopping_criteria_internal.begin(),
+			std::make_shared<MaxIter>(max_iterations_)
+		);
 
 
 	// main loop

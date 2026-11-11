@@ -17,6 +17,47 @@ IterativeMethod::IterativeMethod(std::size_t max_iterations):
 }
 
 
+std::size_t IterativeMethod::get_max_iters() const 
+{
+    return max_iterations_;
+}
+
+
+SearchResults IterativeMethod::get_search_res() const 
+{
+    return search_res_;
+}
+
+
+void IterativeMethod::setup_optimization(OptimizationContext opt_ctxt)
+{
+    opt_ctxt_ = opt_ctxt;
+    opt_ctxt_.stopping_criteria.insert(
+        opt_ctxt_.stopping_criteria.begin(),
+        std::make_shared<MaxIter>(max_iterations_)
+    );
+}
+
+
+void IterativeMethod::update_done()
+{
+    for(const auto& st_cr : opt_ctxt_.stopping_criteria)
+    {
+        if(st_cr->check(*this))
+        {
+            st_cr->get_stop_msg(*this);
+            done_ = true;
+        }
+    }
+} 
+
+
+bool IterativeMethod::is_done() const
+{
+    return done_;
+}
+
+
 RandomSearch::RandomSearch
 (
 	std::size_t max_iterations,

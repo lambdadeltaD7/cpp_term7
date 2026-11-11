@@ -92,10 +92,10 @@ void ex2()
 	double gamma = 2;
 	double vertex_dist = 1;
 
-    DeformPoly method(90, alpha, beta, gamma, vertex_dist); 
+    DeformPoly method(30, alpha, beta, gamma, vertex_dist); 
 
 	std::vector<std::shared_ptr<StoppingCriterion>> stopping_criteria;
-	stopping_criteria.emplace_back(std::make_shared<FuncVal>(0.000001));
+	stopping_criteria.emplace_back(std::make_shared<FuncVal>(0.0000000000001));
 
     OptimizationContext opt_ctxt;
     opt_ctxt.domain = std::make_shared<Rect>(

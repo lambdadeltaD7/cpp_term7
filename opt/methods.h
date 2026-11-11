@@ -18,21 +18,12 @@ class StoppingCriterion;
 using vec = std::vector<double>;
 
 
-
-
 struct OptimizationContext
 {
     std::shared_ptr<Domain> domain;
     std::function<double(const vec&)> function;
 	std::vector<std::shared_ptr<StoppingCriterion>> stopping_criteria;
 };
-
-
-std::ostream& operator<<
-(
-	std::ostream& out,
-	const SearchResults& result
-); 
 
 
 class IterativeMethod 
@@ -46,43 +37,17 @@ protected:
 public:
     IterativeMethod(std::size_t max_iterations);
 
-	std::size_t get_max_iters() const 
-	{
-		return max_iterations_;
-	}
-
-	SearchResults get_search_res() const 
-	{
-		return search_res_;
-	}
-
-	void setup_optimization(OptimizationContext opt_ctxt)
-    {
-        opt_ctxt_ = opt_ctxt;
-        opt_ctxt_.stopping_criteria.insert(
-            opt_ctxt_.stopping_criteria.begin(),
-            std::make_shared<MaxIter>(max_iterations_)
-        );
-    }
-
-    void update_done()
-    {
-        for(const auto& st_cr : opt_ctxt_.stopping_criteria)
-        {
-            if(st_cr->check(*this))
-            {
-                st_cr->get_stop_msg(*this);
-                done_ = true;
-            }
-        }
-    } 
+	void setup_optimization(OptimizationContext opt_ctxt);
 
 	virtual void optimization_step() = 0;
 
-    bool is_done() const
-    {
-        return done_;
-    }
+    void update_done();
+
+    bool is_done() const;
+
+	std::size_t get_max_iters() const;
+
+	SearchResults get_search_res() const;
 
     virtual ~IterativeMethod() = default;
 };

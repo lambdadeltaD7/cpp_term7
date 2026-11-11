@@ -10,6 +10,7 @@
 #include <iostream>
 #include "domains.h"
 #include "stopping_criterion.h"
+#include "utils.h"
 
 class StoppingCriterion;
 
@@ -17,12 +18,6 @@ class StoppingCriterion;
 using vec = std::vector<double>;
 
 
-struct SearchResults 
-{
-    vec point;
-    double value = 0.0;
-    std::size_t iterations = 0;
-};
 
 
 struct OptimizationContext
@@ -70,6 +65,18 @@ public:
         );
     }
 
+    void update_done()
+    {
+        for(const auto& st_cr : opt_ctxt_.stopping_criteria)
+        {
+            if(st_cr->check(*this))
+            {
+                st_cr->get_stop_msg(*this);
+                done_ = true;
+            }
+        }
+    } 
+
 	virtual void optimization_step() = 0;
 
     bool is_done() const
@@ -96,7 +103,7 @@ public:
 	void optimization_step() override;
 };
 
-/*
+
 class DeformPoly: public IterativeMethod
 {
 private:
@@ -105,6 +112,8 @@ private:
 	double gamma_;
 	
 	double vertex_dist_;
+
+    std::vector<Pair> pairs_;
 
 public:
 	DeformPoly(	
@@ -115,13 +124,9 @@ public:
 		double vertex_dist = 1.0
 	);
 
-    SearchResults optimize(
-        const Domain& domain,
-        const std::function<double(const vec&)>& function,
-		const std::vector<std::shared_ptr<StoppingCriterion>>& stopping_criteria
-    ) override;
+	void optimization_step() override;
 };
-*/
+
 
 #endif
 

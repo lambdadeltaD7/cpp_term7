@@ -84,14 +84,9 @@ void ex1()
     std::cout << '\n' << method.get_search_res() << '\n';
 }
 
-/*
+
 void ex2()
 {
-    Rect domain(
-        vec{-6.0, -5.0, -5},
-        vec{5.0, 5.0, 6}
-    );
-	
 	double alpha = 1.0;
 	double beta = 0.5;
 	double gamma = 2;
@@ -102,21 +97,31 @@ void ex2()
 	std::vector<std::shared_ptr<StoppingCriterion>> stopping_criteria;
 	stopping_criteria.emplace_back(std::make_shared<FuncVal>(0.000001));
 
-    const SearchResults result = method.optimize(
-        domain,
-        [](const vec& x) {
-            return f4(x);
-        },
-		stopping_criteria
+    OptimizationContext opt_ctxt;
+    opt_ctxt.domain = std::make_shared<Rect>(
+        vec{-6.0, -5.0, -5},
+        vec{5.0, 5.0, 6}
     );
-    std::cout << '\n' << result << '\n';
+    opt_ctxt.function = [](const vec& x) {
+                            return f4(x);
+                        };
+    opt_ctxt.stopping_criteria = stopping_criteria;
+
+    method.setup_optimization(opt_ctxt);
+
+    while( !method.is_done() )
+    {
+        method.optimization_step();
+    }    
+
+    std::cout << '\n' << method.get_search_res() << '\n';
 }
-*/
+
 
 
 int main()
 {
-	ex1();
+	ex2();
 
     return 0;
 }

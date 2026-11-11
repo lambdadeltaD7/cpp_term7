@@ -38,7 +38,6 @@ void RandomSearch::optimization_step()
 
 	vec& current = search_res_.point;
 	double& current_value = search_res_.value;
-	++search_res_.iterations;
 
     vec candidate = opt_ctxt_.domain->sample(generator_);
     double candidate_value = opt_ctxt_.function(candidate);
@@ -47,18 +46,13 @@ void RandomSearch::optimization_step()
         current = std::move(candidate);
         current_value = candidate_value;
     }
+    
+	++search_res_.iterations;
 
-    for(const auto& st_cr : opt_ctxt_.stopping_criteria)
-    {
-        if(st_cr->check(*this))
-        {
-            st_cr->get_stop_msg(*this);
-            done_ = true;
-        }
-    }
+    update_done();
 }
 
-/*
+
 DeformPoly::DeformPoly
 (	
 	std::size_t max_iterations,
@@ -99,133 +93,104 @@ std::vector<Pair> simplex_init(
 
 
 
-SearchResults DeformPoly::optimize
-(
-	const Domain& domain,
-	const std::function<double(const vec&)>& function,
-	const std::vector<std::shared_ptr<StoppingCriterion>>& stopping_criteria
-)
+void DeformPoly::optimization_step()
 {
-	std::cout << "Running DeformPoly method\n\n";
-
-	std::size_t n = domain.get_dim();
-
-	// initialize polygon vertices 
-	std::vector<Pair> pairs = 
-		simplex_init(
-			n,
-			vertex_dist_,
-			function
-		);
-		
-	// initial sort
-	std::sort(pairs.begin(), pairs.end(), comp);
-
+    std::size_t n = opt_ctxt_.domain->get_dim();
 
 	// some refs for convinience
 	vec& current = search_res_.point;
-	current = pairs[0].point;
-
 	double& current_value = search_res_.value;
-	current_value = function(current);
-
 	std::size_t& iterations = search_res_.iterations;
-	iterations = 0;
+    auto& function = opt_ctxt_.function;
+
+    if( iterations == 0 )
+    {
+        // initialize polygon vertices 
+        pairs_ = 
+            simplex_init(
+                n,
+                vertex_dist_,
+                function
+            );
+            
+        // initial sort
+        std::sort(pairs_.begin(), pairs_.end(), comp);
+
+        current = pairs_[0].point;
+	    current_value = function(current);
+    }
 
 
-	// explicitly add MaxIter criterion 
-	std::vector<std::shared_ptr<StoppingCriterion>>
-		stopping_criteria_internal = stopping_criteria;
+    vec mass_c = compute_mean(pairs_);
+    
+    // reflection
+    vec x_refl = mass_c + alpha_ * (mass_c - pairs_[n].point); 
+    double f_refl = function(x_refl);
 
-	stopping_criteria_internal.insert(
-			stopping_criteria_internal.begin(),
-			std::make_shared<MaxIter>(max_iterations_)
-		);
+    if (f_refl < pairs_[0].val)
+    {
+        // expansion
+        vec x_exp = mass_c + gamma_ * (x_refl - mass_c); 
+        double f_exp = function(x_exp);
 
+        if (f_exp < pairs_[0].val)
+        {
+            pairs_[n].point = x_exp;
+            pairs_[n].val = f_exp;
+        }
+        else
+        {
+            pairs_[n].point = x_refl;
+            pairs_[n].val = f_refl;
+        }
+    }
+    else if (f_refl < pairs_[n - 1].val)
+    {
+        pairs_[n].point = x_refl;
+        pairs_[n].val = f_refl;
+    }
+    else
+    {
+        if (f_refl < pairs_[n].val)
+        {
+            pairs_[n].point = x_refl;
+            pairs_[n].val = f_refl;
+        }
 
-	// main loop
-	for (;;++iterations) 
-	{
-		for(const auto& st_cr : stopping_criteria_internal)
-		{
-			if(st_cr->check(*this))
-			{
-				st_cr->get_stop_msg(*this);
-				goto end;
-			}
-		}
+        // shrinkin'
+        vec x_shr = mass_c + beta_ * (pairs_[n].point - mass_c);
+        double f_shr = function(x_shr);
 
-		vec mass_c = compute_mean(pairs);
-		
-		// reflection
-		vec x_refl = mass_c + alpha_ * (mass_c - pairs[n].point); 
-		double f_refl = function(x_refl);
+        if (f_shr < pairs_[n].val)
+        {
+            pairs_[n].val = f_shr;
+            pairs_[n].point = x_shr;
+        }
+        else 
+        {
+            // reduction
+            for (std::size_t i=0; i<pairs_.size(); ++i)
+                pairs_[i].point = pairs_[0].point + 
+                    0.5 * (pairs_[i].point - pairs_[0].point);
+        }
+    }
+    
+    // put pairs_[n] on it's place (do sort)
+    for (std::size_t i=0; i<=n; ++i)
+    {
+        if(pairs_[n].val <= pairs_[i].val)
+        {
+            pairs_.insert(pairs_.begin()+i, pairs_[n]);
+            pairs_.pop_back();
+            break;
+        }
+    }
+    
+    current = pairs_[0].point;
+    current_value = pairs_[0].val;
+	++iterations;
 
-		if (f_refl < pairs[0].val)
-		{
-			// expansion
-			vec x_exp = mass_c + gamma_ * (x_refl - mass_c); 
-			double f_exp = function(x_exp);
-
-			if (f_exp < pairs[0].val)
-			{
-				pairs[n].point = x_exp;
-				pairs[n].val = f_exp;
-			}
-			else
-			{
-				pairs[n].point = x_refl;
-				pairs[n].val = f_refl;
-			}
-		}
-		else if (f_refl < pairs[n - 1].val)
-		{
-			pairs[n].point = x_refl;
-			pairs[n].val = f_refl;
-		}
-		else
-		{
-			if (f_refl < pairs[n].val)
-			{
-				pairs[n].point = x_refl;
-				pairs[n].val = f_refl;
-			}
-
-			// shrinkin'
-			vec x_shr = mass_c + beta_ * (pairs[n].point - mass_c);
-			double f_shr = function(x_shr);
-
-			if (f_shr < pairs[n].val)
-			{
-				pairs[n].val = f_shr;
-				pairs[n].point = x_shr;
-			}
-			else 
-			{
-				// reduction
-				for (std::size_t i=0; i<pairs.size(); ++i)
-					pairs[i].point = pairs[0].point + 
-						0.5 * (pairs[i].point - pairs[0].point);
-			}
-		}
-		
-		// put pairs[n] on it's place (do sort)
-		for (std::size_t i=0; i<=n; ++i)
-		{
-			if(pairs[n].val <= pairs[i].val)
-			{
-				pairs.insert(pairs.begin()+i, pairs[n]);
-				pairs.pop_back();
-				break;
-			}
-		}
-		
-		current = pairs[0].point;
-		current_value = pairs[0].val;
-	}
-	
-	end:
-		return search_res_;
+    update_done();	
 }
-*/
+
 

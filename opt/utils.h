@@ -3,10 +3,16 @@
 
 #include <iostream>
 #include <vector>
-#include "methods.h"
+#include <iomanip>
 
 using vec = std::vector<double>;
 
+struct SearchResults 
+{
+    vec point;
+    double value = 0.0;
+    std::size_t iterations = 0;
+};
 
 struct Pair
 {

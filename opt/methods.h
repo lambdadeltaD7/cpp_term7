@@ -9,7 +9,7 @@
 #include <iomanip>
 #include <iostream>
 #include "domains.h"
-
+#include "stopping_criterion.h"
 
 class StoppingCriterion;
 
@@ -25,6 +25,14 @@ struct SearchResults
 };
 
 
+struct OptimizationContext
+{
+    std::shared_ptr<Domain> domain;
+    std::function<double(const vec&)> function;
+	std::vector<std::shared_ptr<StoppingCriterion>> stopping_criteria;
+};
+
+
 std::ostream& operator<<
 (
 	std::ostream& out,
@@ -36,17 +44,12 @@ class IterativeMethod
 {
 protected:
     std::size_t max_iterations_;
+    bool done_;
 	SearchResults search_res_;
+    OptimizationContext opt_ctxt_;
 
 public:
     IterativeMethod(std::size_t max_iterations);
-
-    virtual SearchResults optimize(
-        const Domain& domain,
-        const std::function<double(const vec&)>& function,
-		const std::vector<std::shared_ptr<StoppingCriterion>>& stopping_criteria
-    ) = 0;
-
 
 	std::size_t get_max_iters() const 
 	{
@@ -57,6 +60,22 @@ public:
 	{
 		return search_res_;
 	}
+
+	void setup_optimization(OptimizationContext opt_ctxt)
+    {
+        opt_ctxt_ = opt_ctxt;
+        opt_ctxt_.stopping_criteria.insert(
+            opt_ctxt_.stopping_criteria.begin(),
+            std::make_shared<MaxIter>(max_iterations_)
+        );
+    }
+
+	virtual void optimization_step() = 0;
+
+    bool is_done() const
+    {
+        return done_;
+    }
 
     virtual ~IterativeMethod() = default;
 };
@@ -74,14 +93,10 @@ public:
 		std::mt19937& generator
     );
 
-    SearchResults optimize(
-        const Domain& domain,
-        const std::function<double(const vec&)>& function,
-		const std::vector<std::shared_ptr<StoppingCriterion>>& stopping_criteria
-    ) override;
+	void optimization_step() override;
 };
 
-
+/*
 class DeformPoly: public IterativeMethod
 {
 private:
@@ -106,7 +121,7 @@ public:
 		const std::vector<std::shared_ptr<StoppingCriterion>>& stopping_criteria
     ) override;
 };
-
+*/
 
 #endif
 

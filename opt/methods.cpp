@@ -6,7 +6,8 @@ using vec = std::vector<double>;
 
 
 IterativeMethod::IterativeMethod(std::size_t max_iterations): 
-	max_iterations_{max_iterations}
+	max_iterations_{max_iterations},
+    done_{false}
 {
 	if (max_iterations_ == 0)
 	{
@@ -26,61 +27,38 @@ RandomSearch::RandomSearch
 {}
 
 
-SearchResults RandomSearch::optimize(
-	const Domain& domain,
-	const std::function<double(const vec&)>& function,
-	const std::vector<std::shared_ptr<StoppingCriterion>>& stopping_criteria
-) 
-{
-	std::cout << "Running RandomSearch method\n\n";
 
+void RandomSearch::optimization_step() 
+{
+    if (search_res_.iterations == 0)
+    {
+        search_res_.point = opt_ctxt_.domain->sample(generator_); 
+        search_res_.value = opt_ctxt_.function(search_res_.point);
+    }
 
 	vec& current = search_res_.point;
-	current = domain.sample(generator_);
-
 	double& current_value = search_res_.value;
-	current_value = function(current);
+	++search_res_.iterations;
 
-	std::size_t& iterations = search_res_.iterations;
-	iterations = 0;
+    vec candidate = opt_ctxt_.domain->sample(generator_);
+    double candidate_value = opt_ctxt_.function(candidate);
 
+    if (candidate_value < current_value) {
+        current = std::move(candidate);
+        current_value = candidate_value;
+    }
 
-	// explicitly add MaxIter criterion 
-	std::vector<std::shared_ptr<StoppingCriterion>>
-		stopping_criteria_internal = stopping_criteria;
-
-	stopping_criteria_internal.insert(
-			stopping_criteria_internal.begin(),
-			std::make_shared<MaxIter>(max_iterations_)
-		);
-
-
-	for (;;++iterations) 
-	{
-		vec candidate = domain.sample(generator_);
-		const double candidate_value = function(candidate);
-
-		if (candidate_value < current_value) {
-			current = std::move(candidate);
-			current_value = candidate_value;
-		}
-
-		for(const auto& st_cr : stopping_criteria_internal)
-		{
-			if(st_cr->check(*this))
-			{
-				st_cr->get_stop_msg(*this);
-				goto end;
-			}
-		}
-
-	}
-
-	end:
-		return search_res_;
+    for(const auto& st_cr : opt_ctxt_.stopping_criteria)
+    {
+        if(st_cr->check(*this))
+        {
+            st_cr->get_stop_msg(*this);
+            done_ = true;
+        }
+    }
 }
 
-
+/*
 DeformPoly::DeformPoly
 (	
 	std::size_t max_iterations,
@@ -249,5 +227,5 @@ SearchResults DeformPoly::optimize
 	end:
 		return search_res_;
 }
-
+*/
 

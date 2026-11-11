@@ -54,29 +54,37 @@ double f4(const vec& x)
 
 void ex1()
 {
-	std::mt19937 gen(std::random_device{}());
-	// std::mt19937 gen(67);
-
-    Rect domain(
-        vec{-6.0, -5.0},
-        vec{5.0, 5.0}
-    );
+	// std::mt19937 gen(std::random_device{}());
+	std::mt19937 gen(67);
 
     RandomSearch method(800000, gen);
 
+    
 	std::vector<std::shared_ptr<StoppingCriterion>> stopping_criteria;
 	stopping_criteria.emplace_back(std::make_shared<FuncVal>(0.001));
 
-    const SearchResults result = method.optimize(
-        domain,
-        [](const vec& x) {
-            return f2(x);
-        },
-		stopping_criteria
+    OptimizationContext opt_ctxt;
+    opt_ctxt.domain = std::make_shared<Rect>(
+        vec{-6.0, -5.0},
+        vec{5.0, 5.0}
     );
-    std::cout << '\n' << result << '\n';
+    opt_ctxt.function = [](const vec& x) {
+                            return f2(x);
+                        };
+    opt_ctxt.stopping_criteria = stopping_criteria;
+
+    method.setup_optimization(opt_ctxt);
+
+    
+    while( !method.is_done() )
+    {
+        method.optimization_step();
+    }    
+
+    std::cout << '\n' << method.get_search_res() << '\n';
 }
 
+/*
 void ex2()
 {
     Rect domain(
@@ -103,11 +111,12 @@ void ex2()
     );
     std::cout << '\n' << result << '\n';
 }
+*/
 
 
 int main()
 {
-	ex2();
+	ex1();
 
     return 0;
 }

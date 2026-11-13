@@ -58,6 +58,7 @@ class RandomSearch : public IterativeMethod
 private:
 	unsigned int seed_;
     std::mt19937& generator_;
+    bool point_updated_;
 
 public:
     RandomSearch(
@@ -66,6 +67,8 @@ public:
     );
 
 	void optimization_step() override;
+
+    bool is_updated() const;
 };
 
 

@@ -64,9 +64,15 @@ RandomSearch::RandomSearch
 	std::mt19937& generator
 ):    
 	IterativeMethod{max_iterations},
-	generator_{generator} 
+	generator_{generator},
+    point_updated_{false}
 {}
 
+
+bool RandomSearch::is_updated() const
+{
+    return point_updated_;
+}
 
 
 void RandomSearch::optimization_step() 
@@ -86,6 +92,10 @@ void RandomSearch::optimization_step()
     if (candidate_value < current_value) {
         current = std::move(candidate);
         current_value = candidate_value;
+        point_updated_ = true;
+    }
+    else{
+        point_updated_ = false;
     }
     
 	++search_res_.iterations;

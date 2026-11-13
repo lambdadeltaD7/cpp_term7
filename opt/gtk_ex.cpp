@@ -64,7 +64,27 @@ double f4(const vec& x)
 }
 
 
-/*
+void draw_rect
+(
+    cairo_t *cr,
+    int x1, int y1,
+    int x2, int y2
+)
+{
+    cairo_move_to(cr, x1, y1);
+    cairo_line_to(cr, x1, y2);
+
+    cairo_move_to(cr, x1, y2);
+    cairo_line_to(cr, x2, y2);
+
+    cairo_move_to(cr, x2, y2);
+    cairo_line_to(cr, x2, y1);
+
+    cairo_move_to(cr, x2, y1);
+    cairo_line_to(cr, x1, y1);
+}
+
+
 gboolean draw
 (
     GtkWidget *widget,
@@ -74,28 +94,50 @@ gboolean draw
 {
     if(count <= 1)
         return FALSE;
+    
+    double offset_frac = 0.15;
 
     int w = gtk_widget_get_allocated_width(widget);
     int h = gtk_widget_get_allocated_height(widget);
+   
+    int x1 = w * offset_frac;
+    int y1 = h * ( 1 - offset_frac );
+    int x2 = w * ( 1 - offset_frac );
+    int y2 = h * offset_frac;
+    draw_rect(
+        cr,
+        x1, y1,
+        x2, y2
+    );
+
     int x;
     int y;
 
     for (int i = 0; i < count - 1; i++) {
-        x = ( points[i][0] - p1[0] ) * ( w ) / ( p2[0] - p1[0] );
-        y = ( points[i][1] - p1[1] ) * ( h ) / ( p2[1] - p1[1] );
+        x = ( points[i][0] - p1[0] ) * ( w * (1 - 2 * offset_frac) )
+                / ( p2[0] - p1[0] ) + w * offset_frac;
+
+        y = ( points[i][1] - p1[1] ) * ( h * (1 - 2 * offset_frac) )
+                / ( p2[1] - p1[1] ) + h * offset_frac;
+
         cairo_move_to(cr, x, y);
 
-        x = ( points[i + 1][0] - p1[0] ) * ( w ) / ( p2[0] - p1[0] ); 
-        y = ( points[i + 1][1] - p1[1] ) * ( h ) / ( p2[1] - p1[1] );
+
+        x = ( points[i + 1][0] - p1[0] ) * ( w * (1 - 2 * offset_frac) ) 
+                / ( p2[0] - p1[0] ) + w * offset_frac; 
+
+        y = ( points[i + 1][1] - p1[1] ) * ( h * (1 - 2 * offset_frac) ) 
+                / ( p2[1] - p1[1] ) + h * offset_frac;
+
         cairo_line_to(cr, x, y);
     }
 
     cairo_stroke(cr);
     return FALSE;
 }
-*/
 
 
+/*
 gboolean draw
 (
     GtkWidget *widget,
@@ -140,6 +182,7 @@ gboolean draw
     cairo_stroke(cr);
     return FALSE;
 }
+*/
 
 
 gboolean update(gpointer data)
@@ -186,14 +229,14 @@ gpointer activate
 void ex1()
 {
     std::this_thread::sleep_for(std::chrono::seconds(1));
-	// std::mt19937 gen(std::random_device{}());
-	std::mt19937 gen(67);
+    std::mt19937 gen(std::random_device{}());
+	//std::mt19937 gen(7777777777);
 
-    RandomSearch method(2000, gen);
+    RandomSearch method(200000, gen);
 
     
 	std::vector<std::shared_ptr<StoppingCriterion>> stopping_criteria;
-	stopping_criteria.emplace_back(std::make_shared<FuncVal>(0.001));
+	stopping_criteria.emplace_back(std::make_shared<FuncVal>(0.00000001));
 
     OptimizationContext opt_ctxt;
     opt_ctxt.domain = std::make_shared<Rect>(p1, p2);
@@ -207,9 +250,13 @@ void ex1()
     while( !method.is_done() )
     {
         method.optimization_step();
-        vec point = method.get_search_res().point;
-        points[count++] = point;
-        update(area_pointer);
+        if( method.is_updated() )
+        {
+            vec point = method.get_search_res().point;
+            points[count++] = point;
+            update(area_pointer);
+            std::this_thread::sleep_for(std::chrono::milliseconds(300));
+        }
     }    
 
     std::cout << '\n' << method.get_search_res() << '\n';
@@ -276,7 +323,7 @@ int main
         nullptr
     );
 
-    std::thread calculator(ex2);
+    std::thread calculator(ex1);
 
     g_application_run(
         G_APPLICATION (app),

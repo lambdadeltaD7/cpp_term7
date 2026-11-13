@@ -79,6 +79,8 @@ void ex1()
     while( !method.is_done() )
     {
         method.optimization_step();
+        vec p = method.get_search_res().point;
+        printf("%f %f\n",p[0],p[1]);
     }    
 
     std::cout << '\n' << method.get_search_res() << '\n';
@@ -121,7 +123,7 @@ void ex2()
 
 int main()
 {
-	ex2();
+	ex1();
 
     return 0;
 }

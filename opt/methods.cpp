@@ -234,4 +234,18 @@ void DeformPoly::optimization_step()
     update_done();	
 }
 
+std::vector<vec> DeformPoly::get_poly() const
+{
+    std::vector<vec> res;
+    
+    for (const auto& p : pairs_)
+        res.push_back(p.point);
+
+    return res;
+}
+
+
+
+
+
 

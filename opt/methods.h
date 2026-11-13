@@ -90,6 +90,8 @@ public:
 	);
 
 	void optimization_step() override;
+    
+    std::vector<vec> get_poly() const;
 };
 
 

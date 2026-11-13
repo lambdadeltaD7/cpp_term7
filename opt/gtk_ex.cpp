@@ -11,6 +11,7 @@
 using vec = std::vector<double>;
 
 vec points[2026];
+std::vector<vec> poly;
 int count = 0;
 
 vec p1 = vec{-6.0, -5.0};
@@ -63,7 +64,7 @@ double f4(const vec& x)
 }
 
 
-
+/*
 gboolean draw
 (
     GtkWidget *widget,
@@ -86,6 +87,53 @@ gboolean draw
 
         x = ( points[i + 1][0] - p1[0] ) * ( w ) / ( p2[0] - p1[0] ); 
         y = ( points[i + 1][1] - p1[1] ) * ( h ) / ( p2[1] - p1[1] );
+        cairo_line_to(cr, x, y);
+    }
+
+    cairo_stroke(cr);
+    return FALSE;
+}
+*/
+
+
+gboolean draw
+(
+    GtkWidget *widget,
+    cairo_t *cr,
+    gpointer data
+)
+{
+
+    int x;
+    int y;
+    
+    int n = poly.size();
+    double lx = 9999;
+    double rx = -9999;
+    double ly = 9999;
+    double ry = -9999;
+    for(int i=0; i<n; ++i)
+    {
+        lx = std::min(lx, poly[i][0]);
+        rx = std::max(rx, poly[i][0]);
+        ly = std::min(ly, poly[i][1]);
+        ry = std::max(ry, poly[i][1]);
+    }
+    lx -= ( rx - lx ) / 4;
+    rx += ( rx - lx ) / 4;
+    ly -= ( ry - ly ) / 4;
+    ry += ( ry - ly ) / 4;
+
+    int w = gtk_widget_get_allocated_width(widget);
+    int h = gtk_widget_get_allocated_height(widget);
+
+    for (int i = 0; i < n; i++) {
+        x = ( poly[i][0] - lx ) * ( w / 2.0 ) / ( rx - lx ) + w / 4.0;
+        y = ( poly[i][1] - ly ) * ( h / 2.0 ) / ( ry - ly ) + h / 4.0;
+        cairo_move_to(cr, x, y);
+
+        x = ( poly[ ( i + 1 ) % n ][0] - lx ) * ( w / 2.0 ) / ( rx - lx ) + w / 4.0;
+        y = ( poly[ ( i + 1 ) % n ][1] - ly ) * ( h / 2.0 ) / ( ry - ly ) + h / 4.0;
         cairo_line_to(cr, x, y);
     }
 
@@ -168,6 +216,45 @@ void ex1()
 }
 
 
+void ex2()
+{
+    std::this_thread::sleep_for(std::chrono::seconds(1));
+
+	double alpha = 1.0;
+	double beta = 0.5;
+	double gamma = 2;
+	double vertex_dist = 1;
+
+    DeformPoly method(30, alpha, beta, gamma, vertex_dist); 
+
+	std::vector<std::shared_ptr<StoppingCriterion>> stopping_criteria;
+	stopping_criteria.emplace_back(std::make_shared<FuncVal>(0.0000000000001));
+
+    OptimizationContext opt_ctxt;
+    opt_ctxt.domain = std::make_shared<Rect>(
+        vec{-6.0, -5.0},
+        vec{5.0, 5.0}
+    );
+    opt_ctxt.function = [](const vec& x) {
+                            return f3(x);
+                        };
+    opt_ctxt.stopping_criteria = stopping_criteria;
+
+    method.setup_optimization(opt_ctxt);
+
+    while( !method.is_done() )
+    {
+        method.optimization_step();
+        poly.clear();
+        poly = method.get_poly();
+        update(area_pointer);
+        std::this_thread::sleep_for(std::chrono::seconds(1));
+    }    
+
+    std::cout << '\n' << method.get_search_res() << '\n';
+}
+
+
 int main
 (
     int argc,
@@ -189,7 +276,7 @@ int main
         nullptr
     );
 
-    std::thread calculator(ex1);
+    std::thread calculator(ex2);
 
     g_application_run(
         G_APPLICATION (app),

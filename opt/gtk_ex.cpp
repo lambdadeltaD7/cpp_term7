@@ -84,7 +84,7 @@ void draw_rect
     cairo_line_to(cr, x1, y1);
 }
 
-
+/*
 gboolean draw
 (
     GtkWidget *widget,
@@ -112,7 +112,8 @@ gboolean draw
 
     int x;
     int y;
-
+    int radius = 5;
+    
     for (int i = 0; i < count - 1; i++) {
         x = ( points[i][0] - p1[0] ) * ( w * (1 - 2 * offset_frac) )
                 / ( p2[0] - p1[0] ) + w * offset_frac;
@@ -123,21 +124,40 @@ gboolean draw
         cairo_move_to(cr, x, y);
 
 
-        x = ( points[i + 1][0] - p1[0] ) * ( w * (1 - 2 * offset_frac) ) 
+        x = ( points[ i + 1 ][0] - p1[0] ) * ( w * (1 - 2 * offset_frac) ) 
                 / ( p2[0] - p1[0] ) + w * offset_frac; 
 
-        y = ( points[i + 1][1] - p1[1] ) * ( h * (1 - 2 * offset_frac) ) 
+        y = ( points[ i + 1 ][1] - p1[1] ) * ( h * (1 - 2 * offset_frac) ) 
                 / ( p2[1] - p1[1] ) + h * offset_frac;
 
         cairo_line_to(cr, x, y);
+    }
+    
+    cairo_stroke(cr);
+
+
+    for (int i = 0; i < count; ++i)
+    {
+        x = ( points[i][0] - p1[0] ) * ( w * (1 - 2 * offset_frac) )
+                / ( p2[0] - p1[0] ) + w * offset_frac;
+
+        y = ( points[i][1] - p1[1] ) * ( h * (1 - 2 * offset_frac) )
+                / ( p2[1] - p1[1] ) + h * offset_frac;
+
+        cairo_move_to(cr, x, y);
+
+        cairo_arc(cr, x, y, radius, 0, 2 * M_PI);
+        cairo_set_source_rgb(cr, 1.0, 0.0, 0.0);
+        cairo_fill(cr);
     }
 
     cairo_stroke(cr);
     return FALSE;
 }
+*/
 
 
-/*
+
 gboolean draw
 (
     GtkWidget *widget,
@@ -150,39 +170,52 @@ gboolean draw
     int y;
     
     int n = poly.size();
-    double lx = 9999;
-    double rx = -9999;
-    double ly = 9999;
-    double ry = -9999;
-    for(int i=0; i<n; ++i)
-    {
-        lx = std::min(lx, poly[i][0]);
-        rx = std::max(rx, poly[i][0]);
-        ly = std::min(ly, poly[i][1]);
-        ry = std::max(ry, poly[i][1]);
-    }
-    lx -= ( rx - lx ) / 4;
-    rx += ( rx - lx ) / 4;
-    ly -= ( ry - ly ) / 4;
-    ry += ( ry - ly ) / 4;
 
     int w = gtk_widget_get_allocated_width(widget);
     int h = gtk_widget_get_allocated_height(widget);
 
+    double offset_frac = 0.15;
+   
+    int x1 = w * offset_frac;
+    int y1 = h * ( 1 - offset_frac );
+    int x2 = w * ( 1 - offset_frac );
+    int y2 = h * offset_frac;
+    draw_rect(
+        cr,
+        x1, y1,
+        x2, y2
+    );
+
     for (int i = 0; i < n; i++) {
-        x = ( poly[i][0] - lx ) * ( w / 2.0 ) / ( rx - lx ) + w / 4.0;
-        y = ( poly[i][1] - ly ) * ( h / 2.0 ) / ( ry - ly ) + h / 4.0;
+        x = ( poly[i][0] - p1[0] ) * ( w * (1 - 2 * offset_frac) ) / ( p2[0] - p1[0] ) + w * offset_frac;
+        y = ( poly[i][1] - p1[1] ) * ( h * (1 - 2 * offset_frac) ) / ( p2[1] - p1[1] ) + h * offset_frac;
         cairo_move_to(cr, x, y);
 
-        x = ( poly[ ( i + 1 ) % n ][0] - lx ) * ( w / 2.0 ) / ( rx - lx ) + w / 4.0;
-        y = ( poly[ ( i + 1 ) % n ][1] - ly ) * ( h / 2.0 ) / ( ry - ly ) + h / 4.0;
+        x = ( poly[ ( i + 1 ) % n ][0] - p1[0] ) * ( w * (1 - 2 * offset_frac) ) / ( p2[0] - p1[0] ) + w * offset_frac;
+        y = ( poly[ ( i + 1 ) % n ][1] - p1[1] ) * ( h * (1 - 2 * offset_frac) ) / ( p2[1] - p1[1] ) + h * offset_frac;
         cairo_line_to(cr, x, y);
+    }
+
+    cairo_stroke(cr);
+
+    int radius = 5;
+    for (int i = 0; i < n; ++i)
+    {
+        x = ( poly[i][0] - p1[0] ) * ( w * (1 - 2 * offset_frac) ) / ( p2[0] - p1[0] ) + w * offset_frac;
+        y = ( poly[i][1] - p1[1] ) * ( h * (1 - 2 * offset_frac) ) / ( p2[1] - p1[1] ) + h * offset_frac;
+
+        cairo_move_to(cr, x, y);
+
+        cairo_arc(cr, x, y, radius, 0, 2 * M_PI);
+        cairo_set_source_rgb(cr, 1.0, 0.0, 0.0);
+        cairo_fill(cr);
     }
 
     cairo_stroke(cr);
     return FALSE;
 }
-*/
+
+
 
 
 gboolean update(gpointer data)
@@ -278,10 +311,7 @@ void ex2()
 	stopping_criteria.emplace_back(std::make_shared<FuncVal>(0.0000000000001));
 
     OptimizationContext opt_ctxt;
-    opt_ctxt.domain = std::make_shared<Rect>(
-        vec{-6.0, -5.0},
-        vec{5.0, 5.0}
-    );
+    opt_ctxt.domain = std::make_shared<Rect>(p1,p2);
     opt_ctxt.function = [](const vec& x) {
                             return f3(x);
                         };
@@ -323,7 +353,7 @@ int main
         nullptr
     );
 
-    std::thread calculator(ex1);
+    std::thread calculator(ex2);
 
     g_application_run(
         G_APPLICATION (app),

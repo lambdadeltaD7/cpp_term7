@@ -67,10 +67,15 @@ double f4(const vec& x)
 void draw_rect
 (
     cairo_t *cr,
-    int x1, int y1,
-    int x2, int y2
+    int w, int h,
+    double offset_frac
 )
 {
+    int x1 = w * offset_frac;
+    int y1 = h * ( 1 - offset_frac );
+    int x2 = w * ( 1 - offset_frac );
+    int y2 = h * offset_frac;
+
     cairo_move_to(cr, x1, y1);
     cairo_line_to(cr, x1, y2);
 
@@ -84,8 +89,8 @@ void draw_rect
     cairo_line_to(cr, x1, y1);
 }
 
-/*
-gboolean draw
+
+gboolean draw_rand
 (
     GtkWidget *widget,
     cairo_t *cr,
@@ -95,19 +100,14 @@ gboolean draw
     if(count <= 1)
         return FALSE;
     
-    double offset_frac = 0.15;
-
     int w = gtk_widget_get_allocated_width(widget);
     int h = gtk_widget_get_allocated_height(widget);
-   
-    int x1 = w * offset_frac;
-    int y1 = h * ( 1 - offset_frac );
-    int x2 = w * ( 1 - offset_frac );
-    int y2 = h * offset_frac;
+
+    double offset_frac = 0.15;
     draw_rect(
         cr,
-        x1, y1,
-        x2, y2
+        w, h,
+        offset_frac
     );
 
     int x;
@@ -154,11 +154,11 @@ gboolean draw
     cairo_stroke(cr);
     return FALSE;
 }
-*/
 
 
 
-gboolean draw
+
+gboolean draw_deform
 (
     GtkWidget *widget,
     cairo_t *cr,
@@ -175,15 +175,10 @@ gboolean draw
     int h = gtk_widget_get_allocated_height(widget);
 
     double offset_frac = 0.15;
-   
-    int x1 = w * offset_frac;
-    int y1 = h * ( 1 - offset_frac );
-    int x2 = w * ( 1 - offset_frac );
-    int y2 = h * offset_frac;
     draw_rect(
         cr,
-        x1, y1,
-        x2, y2
+        w, h,
+        offset_frac
     );
 
     for (int i = 0; i < n; i++) {
@@ -216,18 +211,6 @@ gboolean draw
 }
 
 
-
-
-gboolean update(gpointer data)
-{
-    GtkWidget *area = GTK_WIDGET(data);
-
-    gtk_widget_queue_draw(area);
-
-    return G_SOURCE_CONTINUE;
-}
-
-
 gpointer activate
 (
     GtkApplication *app,
@@ -239,19 +222,11 @@ gpointer activate
 
     GtkWidget *area = gtk_drawing_area_new();    
     area_pointer = area;
-    g_signal_connect(
-        area,
-        "draw",
-        G_CALLBACK(draw),
-        nullptr
-    );
 
     gtk_container_add(
         GTK_CONTAINER(window),
         area
     );    
-
-    //g_timeout_add(500, update, area);
 
     gtk_widget_show_all(window);
     
@@ -262,6 +237,13 @@ gpointer activate
 void ex1()
 {
     std::this_thread::sleep_for(std::chrono::seconds(1));
+    g_signal_connect(
+        area_pointer,
+        "draw",
+        G_CALLBACK(draw_rand),
+        nullptr
+    );
+
     std::mt19937 gen(std::random_device{}());
 	//std::mt19937 gen(7777777777);
 
@@ -287,7 +269,7 @@ void ex1()
         {
             vec point = method.get_search_res().point;
             points[count++] = point;
-            update(area_pointer);
+            gtk_widget_queue_draw(GTK_WIDGET(area_pointer));
             std::this_thread::sleep_for(std::chrono::milliseconds(300));
         }
     }    
@@ -299,6 +281,12 @@ void ex1()
 void ex2()
 {
     std::this_thread::sleep_for(std::chrono::seconds(1));
+    g_signal_connect(
+        area_pointer,
+        "draw",
+        G_CALLBACK(draw_deform),
+        nullptr
+    );
 
 	double alpha = 1.0;
 	double beta = 0.5;
@@ -324,7 +312,7 @@ void ex2()
         method.optimization_step();
         poly.clear();
         poly = method.get_poly();
-        update(area_pointer);
+        gtk_widget_queue_draw(GTK_WIDGET(area_pointer));
         std::this_thread::sleep_for(std::chrono::seconds(1));
     }    
 
@@ -344,7 +332,6 @@ int main
             nullptr,
             G_APPLICATION_DEFAULT_FLAGS
     );
-
     
     g_signal_connect(
         app,

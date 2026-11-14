@@ -4,6 +4,7 @@
 #include <iostream>
 #include <vector>
 #include <iomanip>
+#include <cmath>
 
 using vec = std::vector<double>;
 
@@ -42,5 +43,15 @@ std::ostream& operator<<
 	std::ostream& out,
 	const SearchResults& result
 ); 
+
+
+double f1(const vec& x);
+
+double f2(const vec& x);
+
+double f3(const vec& x);
+
+double f4(const vec& x);
+
 #endif
 

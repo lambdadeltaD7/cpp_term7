@@ -94,3 +94,48 @@ std::ostream& operator<<
     return out;
 }
 
+
+double f1(const vec& x) 
+{
+    if (x.size() != 2) 
+	{
+        throw std::invalid_argument("f1 expects 2 dimensions");
+    }
+
+    return x[0] * x[0] + x[1] * x[1];
+}
+
+double f2(const vec& x)
+{
+    if (x.size() != 2) 
+	{
+        throw std::invalid_argument("f2 expects 2 dimensions");
+    }
+
+    return 100.0 * std::pow(x[1] - x[0] * x[0], 2)
+         + std::pow(1.0 - x[0], 2);
+}
+
+double f3(const vec& x) 
+{
+    if (x.size() != 2) 
+	{
+        throw std::invalid_argument("f3 expects 2 dimensions");
+    }
+
+    return std::pow(x[0] - 2.0, 2)
+         + 2.0 * std::pow(x[1] + 1.0, 2);
+}
+
+double f4(const vec& x) 
+{
+    if (x.size() != 3) 
+	{
+        throw std::invalid_argument("f4 expects 3 dimensions");
+    }
+
+    return std::pow(x[0] - 1.0, 2)
+         + std::pow(x[1] + 2.0, 2)
+         + std::pow(x[2] - 0.5, 2);
+}
+

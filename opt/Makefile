@@ -1,9 +1,9 @@
 CXX = g++
 
-SRC = $(filter-out main.cpp gtk_ex.cpp,$(wildcard *.cpp))
-COMMON_OBJECTS = $(patsubst %.cpp,build/%.o,$(SRC))
+SRC = $(filter-out src/main.cpp src/gtk_ex.cpp,$(wildcard src/*.cpp))
+COMMON_OBJECTS = $(patsubst src/%.cpp,build/%.o,$(SRC))
 
-CXX_FLAGS = -O3 -march=native -Wall -Wextra 
+CXX_FLAGS = -O3 -march=native -Wall -Wextra -I./include
 DEBUG_FLAGS = -O0 -g3 -Wall -Wextra 
 
 CLI_TARGET = build/cli
@@ -29,7 +29,7 @@ gtk: $(GTK_TARGET)
 debug: $(DEBUG_TARGET)
 
 
-build/%.o: %.cpp
+build/%.o: src/%.cpp
 	mkdir -p $(@D)
 	$(CXX) $(CXX_FLAGS) -MMD -MP -c $< -o $@
 
@@ -41,7 +41,7 @@ $(CLI_TARGET): $(CLI_OBJECTS)
 $(GTK_TARGET): $(GTK_OBJECTS)
 	$(CXX) $(GTK_OBJECTS) $(GTK_LIBS) -o $@
 
-build/gtk_ex.o: gtk_ex.cpp
+build/gtk_ex.o: src/gtk_ex.cpp
 	mkdir -p $(@D)
 	$(CXX) $(CXX_FLAGS) $(GTK_FLAGS) -MMD -MP -c $< -o $@
 
@@ -49,7 +49,7 @@ build/gtk_ex.o: gtk_ex.cpp
 $(DEBUG_TARGET): $(DEBUG_OBJECTS)
 	$(CXX) $(DEBUG_OBJECTS) -o $@
 
-build/debug/%.o: %.cpp
+build/debug/%.o: src/%.cpp
 	mkdir -p $(@D)
 	$(CXX) $(DEBUG_FLAGS) -MMD -MP -c $< -o $@
 
